@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { InteractionType, InteractionResponseType, verifyKey } from 'discord-interactions';
 import { processDiscordBotMessage } from '@/lib/discord';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   const signature = req.headers.get('x-signature-ed25519');
@@ -24,7 +25,46 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ type: InteractionResponseType.PONG });
   }
 
-  // 2. Handle Application Command / Interactions
+  // 2. Handle Message Component Button Clicks (mark_complete_<topicId>)
+  if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
+    const customId = interaction.data?.custom_id || '';
+
+    if (customId.startsWith('mark_complete_')) {
+      const topicId = customId.replace('mark_complete_', '');
+
+      try {
+        await prisma.topic.update({
+          where: { id: topicId },
+          data: { isCompleted: true },
+        });
+
+        return NextResponse.json({
+          type: InteractionResponseType.UPDATE_MESSAGE,
+          data: {
+            content: `${interaction.message?.content || ''}\n\n🎉 **Milestone Marked Completed in Database & Dashboard!**`,
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 2,
+                    style: 2, // Secondary / Disabled Gray
+                    label: '🎉 Completed!',
+                    custom_id: `completed_${topicId}`,
+                    disabled: true,
+                  },
+                ],
+              },
+            ],
+          },
+        });
+      } catch (err) {
+        console.error('[Discord Component Button Error]', err);
+      }
+    }
+  }
+
+  // 3. Handle Application Commands / Text Interactions
   if (interaction.type === InteractionType.APPLICATION_COMMAND || interaction.type === InteractionType.MESSAGE_COMPONENT) {
     const userId = interaction.member?.user?.id || interaction.user?.id || 'unknown';
     const userTag = interaction.member?.user?.username || interaction.user?.username || 'User';

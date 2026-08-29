@@ -45,9 +45,10 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      const lessonMessage = `📚 **Daily AI Coaching - Day ${nextTopic.dayNumber}**\n\n📌 **${nextTopic.title}**\n\n${nextTopic.description}\n\n💡 **Action:** Complete today's milestone and view your visual progress on the Web Dashboard (http://localhost:3000/dashboard)!`;
+      const lessonMessage = `📚 **Daily AI Coaching - Day ${nextTopic.dayNumber}**\n\n📌 **${nextTopic.title}**\n\n${nextTopic.description}\n\n💡 **Action:** Click [ ✅ Mark Completed ] below or track your progress on the Web Dashboard (http://localhost:3000/dashboard)!`;
 
-      const sent = await sendDiscordMessage(user.phone, lessonMessage);
+      // Pass nextTopic.id so Discord DM includes the interactive [ ✅ Mark Completed ] button
+      const sent = await sendDiscordMessage(user.phone, lessonMessage, nextTopic.id);
 
       results.push({
         id: user.id,

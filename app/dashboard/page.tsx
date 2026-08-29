@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import TopicCard from './TopicCard';
+import DiscordConnectCard from './DiscordConnectCard';
 import Link from 'next/link';
 
 export const revalidate = 0; // Dynamic server page
@@ -51,27 +52,33 @@ export default async function DashboardPage() {
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-xl shadow-lg shadow-emerald-500/10">
-              💬
+              📊
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                WhatsApp AI Career Coach
+                AI Career Coach
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
                   Dashboard
                 </span>
               </h1>
               <p className="text-xs text-slate-400 mt-0.5">
-                Headless Meta WhatsApp Backend & RSC Visual Learning Roadmap
+                Gemini 3.6 Flash Skill Gap Analysis & Interactive Discord Reminders
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
-              href="/"
-              className="rounded-lg border border-slate-800 bg-slate-900 px-3.5 py-2 text-xs font-medium text-slate-300 hover:border-slate-700 hover:bg-slate-800 transition"
+              href="/onboarding"
+              className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 transition"
             >
-              ← System Overview & Documentation
+              📄 Upload New Resume
+            </Link>
+            <Link
+              href="/"
+              className="rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-xs font-medium text-slate-300 hover:border-slate-700 hover:bg-slate-800 transition"
+            >
+              ← System Overview
             </Link>
           </div>
         </header>
@@ -79,21 +86,24 @@ export default async function DashboardPage() {
         {/* Main Grid Content */}
         {!primaryUser ? (
           /* Empty State */
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-12 text-center shadow-xl backdrop-blur">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-3xl text-emerald-400 mb-4">
-              📱
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-12 text-center shadow-xl backdrop-blur space-y-4">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-3xl text-emerald-400">
+              📄
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">No Active WhatsApp Users Yet</h2>
-            <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
-              Connect your Meta WhatsApp Cloud API endpoint to start onboarding users, parsing PDF resumes, and generating custom daily AI roadmaps.
+            <h2 className="text-xl font-bold text-white">No Active Career Roadmaps Yet</h2>
+            <p className="text-sm text-slate-400 max-w-md mx-auto">
+              Upload your PDF resume on the Web Onboarding Wizard to perform an AI skill gap analysis and generate a custom daily roadmap.
             </p>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs text-slate-300 font-mono">
-              <span className="text-emerald-400">Webhook Endpoint:</span> /api/webhook
-            </div>
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-xs font-extrabold text-slate-950 shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 transition"
+            >
+              🚀 Upload Resume & Create AI Roadmap
+            </Link>
           </div>
         ) : (
           <>
-            {/* User Overview Bar */}
+            {/* User Overview & Progress Bar */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* User Profile Card */}
               <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur space-y-4">
@@ -104,14 +114,14 @@ export default async function DashboardPage() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white font-mono">{primaryUser.phone}</h3>
+                  <h3 className="text-base font-bold text-white font-mono">{primaryUser.phone}</h3>
                   <p className="text-xs text-slate-400 mt-1">
                     Timeline: <span className="text-slate-200 font-medium">{primaryUser.targetDuration || 'Not set'}</span>
                   </p>
                 </div>
                 {primaryUser.resumeText && (
                   <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3 text-xs text-slate-400 line-clamp-3">
-                    <span className="font-semibold text-slate-300 block mb-1">Extracted Resume Extract:</span>
+                    <span className="font-semibold text-slate-300 block mb-1">Extracted Resume Text:</span>
                     {primaryUser.resumeText}
                   </div>
                 )}
@@ -149,11 +159,14 @@ export default async function DashboardPage() {
               </div>
             </div>
 
+            {/* Discord Connection Card */}
+            <DiscordConnectCard userId={primaryUser.id} currentDiscordId={primaryUser.phone} />
+
             {/* Overarching Goal Header */}
             {goal && (
               <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/20 via-slate-900/80 to-slate-900/80 p-6 backdrop-blur space-y-3">
                 <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                  <span>🎯 AI Personalized Career Strategy</span>
+                  <span>🎯 Gemini AI Skill Gap Strategy</span>
                 </div>
                 <h2 className="text-xl font-bold text-white">{goal.title}</h2>
                 <p className="text-sm text-slate-300 leading-relaxed">{goal.description}</p>
@@ -178,7 +191,7 @@ export default async function DashboardPage() {
 
               {topics.length === 0 ? (
                 <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400 text-sm">
-                  No topics generated yet for this user. Continue the WhatsApp onboarding flow to generate topics.
+                  No topics generated yet. Upload a PDF resume to generate your roadmap.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
