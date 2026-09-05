@@ -1,4 +1,4 @@
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
@@ -17,13 +17,18 @@ export const RoadmapSchema = z.object({
 
 export type RoadmapOutput = z.infer<typeof RoadmapSchema>;
 
+// Initialize Google provider with explicit API Key fallback for Vercel
+const googleProvider = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || '',
+});
+
 export async function generateCareerRoadmap(
   resumeText: string,
   targetDuration: string,
   userGoals: string
 ): Promise<RoadmapOutput> {
   // Use gemini-3.6-flash model via @ai-sdk/google provider
-  const model = google('gemini-3.6-flash');
+  const model = googleProvider('gemini-3.6-flash');
 
   const prompt = `
 Candidate Resume Extract:
