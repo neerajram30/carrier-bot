@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { sendDiscordMessage, validateDiscordUserId } from '@/lib/discord';
+import { sendDiscordMessage, validateDiscordUserId, getAppUrl } from '@/lib/discord';
 
 export async function toggleTopicCompletion(topicId: string, currentStatus: boolean) {
   try {
@@ -84,7 +84,8 @@ export async function updateDiscordConnection(userId: string, discordInput: stri
     }
 
     // 3. Send instant confirmation DM to the verified Discord User
-    const confirmMsg = `🎉 **Discord Bot Reminders Connected!**\n\nHello ${validation.username ? `**${validation.username}**` : ''}! Your Discord account has been linked to your AI Career Roadmap.\n\n📚 **What to expect:**\n• Daily automated lesson pushes delivered to your DMs.\n• Interactive 1-click **[ ✅ Mark Completed ]** buttons.\n• Reply **remaining** anytime to see pending topics.\n• Reply **progress** to view your completion status.\n• Ask any technical or career question to consult your 24/7 Gemini AI Tutor!\n\n📊 **Visual Web Dashboard:** http://localhost:3000/dashboard`;
+    const appUrl = getAppUrl();
+    const confirmMsg = `🎉 **Discord Bot Reminders Connected!**\n\nHello ${validation.username ? `**${validation.username}**` : ''}! Your Discord account has been linked to your AI Career Roadmap.\n\n📚 **What to expect:**\n• Daily automated lesson pushes delivered to your DMs.\n• Interactive 1-click **[ ✅ Mark Completed ]** buttons.\n• Reply **remaining** anytime to see pending topics.\n• Reply **progress** to view your completion status.\n• Ask any technical or career question to consult your 24/7 Gemini AI Tutor!\n\n📊 **Visual Web Dashboard:** ${appUrl}/dashboard`;
 
     const sent = await sendDiscordMessage(discordUserId, confirmMsg);
 

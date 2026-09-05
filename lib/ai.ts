@@ -17,18 +17,26 @@ export const RoadmapSchema = z.object({
 
 export type RoadmapOutput = z.infer<typeof RoadmapSchema>;
 
-// Dynamically resolve Google Provider with quote stripping & clean error messaging
+// Dynamically resolve Google Provider with quote stripping & multi-env key fallback
 export function getGoogleProvider() {
   const rawKey =
     process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
     process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_AI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY ||
     '';
 
   const apiKey = rawKey.replace(/^["']|["']$/g, '').trim();
 
   if (!apiKey) {
+    const matchingKeys = Object.keys(process.env)
+      .filter((k) => k.includes('GOOGLE') || k.includes('GEMINI') || k.includes('KEY'))
+      .join(', ');
+
     throw new Error(
-      'Google Generative AI API Key is missing. Please verify that GOOGLE_GENERATIVE_AI_API_KEY is configured in your environment variables on Vercel.'
+      `Google Generative AI API Key is missing. Environment keys detected: [${matchingKeys || 'none'}]. ` +
+        `IMPORTANT: After adding or editing environment variables on Vercel, you MUST click 'Redeploy' on Vercel for the changes to take effect.`
     );
   }
 

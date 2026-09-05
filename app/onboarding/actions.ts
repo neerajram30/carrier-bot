@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { extractTextFromPdf } from '@/lib/pdf';
 import { generateCareerRoadmap } from '@/lib/ai';
-import { sendDiscordMessage, validateDiscordUserId } from '@/lib/discord';
+import { sendDiscordMessage, validateDiscordUserId, getAppUrl } from '@/lib/discord';
 
 export async function createRoadmapFromWeb(formData: FormData) {
   try {
@@ -91,7 +91,8 @@ export async function createRoadmapFromWeb(formData: FormData) {
 
     // 4. Send Confirmation DM if user provided a Discord User ID
     if (isExplicitDiscord) {
-      const confirmMsg = `🎉 **Welcome to Kunjappan AI Career Coach!**\n\nYour PDF resume has been analyzed and your custom **${roadmap.goalTitle}** roadmap is ready!\n\n📚 **Daily Reminders Enabled:**\n• You will receive automated daily lesson pushes in this DM.\n• Use **[ ✅ Mark Completed ]** buttons or reply **remaining** / **progress** anytime.\n\n📊 **Visual Web Dashboard:** http://localhost:3000/dashboard`;
+      const appUrl = getAppUrl();
+      const confirmMsg = `🎉 **Welcome to Kunjappan AI Career Coach!**\n\nYour PDF resume has been analyzed and your custom **${roadmap.goalTitle}** roadmap is ready!\n\n📚 **Daily Reminders Enabled:**\n• You will receive automated daily lesson pushes in this DM.\n• Use **[ ✅ Mark Completed ]** buttons or reply **remaining** / **progress** anytime.\n\n📊 **Visual Web Dashboard:** ${appUrl}/dashboard`;
 
       await sendDiscordMessage(discordUserId, confirmMsg);
     }

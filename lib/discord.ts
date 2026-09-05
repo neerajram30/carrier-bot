@@ -3,6 +3,16 @@ import { extractTextFromPdf } from './pdf';
 import { generateCareerRoadmap, getGoogleProvider } from './ai';
 import { generateText } from 'ai';
 
+// Helper to resolve the production Vercel base URL dynamically
+export function getAppUrl(): string {
+  const rawUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+    'https://carrier-bot-one.vercel.app';
+
+  return rawUrl.replace(/\/+$/, '');
+}
+
 // Helper to sanitize process.env.DISCORD_BOT_TOKEN (stripping any accidental quotes)
 function getCleanBotToken(): string {
   const raw = process.env.DISCORD_BOT_TOKEN || '';
@@ -138,6 +148,8 @@ export async function sendDiscordMessage(
 // Process incoming Discord message logic (Interactive Intents + Gemini AI Tutor)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function processDiscordBotMessage(discordUserId: string, userTag: string, content: string, attachments: any[], replyFn: (msg: any) => Promise<any>) {
+  const appUrl = getAppUrl();
+
   try {
     const rawContent = content.trim().toLowerCase();
 
@@ -163,7 +175,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
     // 1. "remaining" / "what are the remaining lessons"
     if (rawContent.includes('remaining') || rawContent.includes('left')) {
       if (!user || !user.goal || !user.goal.topics || user.goal.topics.length === 0) {
-        await replyFn('ℹ️ You do not have an active career roadmap yet. Visit http://localhost:3000/onboarding to generate one!');
+        await replyFn(`ℹ️ You do not have an active career roadmap yet. Visit ${appUrl}/onboarding to generate one!`);
         return;
       }
 
@@ -173,7 +185,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
       const percent = Math.round((completed / total) * 100);
 
       if (uncompleted.length === 0) {
-        await replyFn(`🎉 **Congratulations!** You have completed all **${total}** daily milestones in your career roadmap!\n\n📊 View your completed portfolio: http://localhost:3000/dashboard`);
+        await replyFn(`🎉 **Congratulations!** You have completed all **${total}** daily milestones in your career roadmap!\n\n📊 View your completed portfolio: ${appUrl}/dashboard`);
         return;
       }
 
@@ -185,7 +197,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
       const extraCount = uncompleted.length > 7 ? `\n*...and ${uncompleted.length - 7} more topics*` : '';
 
       await replyFn(
-        `📋 **Your Remaining Lessons (${uncompleted.length} Left):**\n\n${list}${extraCount}\n\n📊 **Progress**: ${completed}/${total} Completed (${percent}%)\n🔗 **Visual Web Dashboard**: http://localhost:3000/dashboard`
+        `📋 **Your Remaining Lessons (${uncompleted.length} Left):**\n\n${list}${extraCount}\n\n📊 **Progress**: ${completed}/${total} Completed (${percent}%)\n🔗 **Visual Web Dashboard**: ${appUrl}/dashboard`
       );
       return;
     }
@@ -193,7 +205,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
     // 2. "progress" / "status"
     if (rawContent === 'progress' || rawContent === 'status' || rawContent.includes('progress')) {
       if (!user || !user.goal || !user.goal.topics) {
-        await replyFn('ℹ️ You do not have an active career roadmap. Create one on the web app: http://localhost:3000/onboarding');
+        await replyFn(`ℹ️ You do not have an active career roadmap. Create one on the web app: ${appUrl}/onboarding`);
         return;
       }
 
@@ -202,7 +214,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
       const percent = Math.round((completed / total) * 100);
 
       await replyFn(
-        `🚀 **Active Goal**: ${user.goal.title}\n📈 **Progress**: ${completed} / ${total} Milestones Completed (**${percent}%**)\n📊 **Visual Web Dashboard**: http://localhost:3000/dashboard`
+        `🚀 **Active Goal**: ${user.goal.title}\n📈 **Progress**: ${completed} / ${total} Milestones Completed (**${percent}%**)\n📊 **Visual Web Dashboard**: ${appUrl}/dashboard`
       );
       return;
     }
@@ -210,7 +222,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
     // 3. "today" / "lesson"
     if (rawContent === 'today' || rawContent === 'lesson' || rawContent.includes('today')) {
       if (!user || !user.goal || !user.goal.topics) {
-        await replyFn('ℹ️ No active roadmap found. Visit http://localhost:3000/onboarding to upload your resume!');
+        await replyFn(`ℹ️ No active roadmap found. Visit ${appUrl}/onboarding to upload your resume!`);
         return;
       }
 
@@ -220,7 +232,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
         return;
       }
 
-      const lessonMessage = `📚 **Today's AI Coaching Lesson - Day ${nextTopic.dayNumber}**\n\n📌 **${nextTopic.title}**\n\n${nextTopic.description}\n\n💡 **Action:** Complete today's milestone and track your progress on http://localhost:3000/dashboard`;
+      const lessonMessage = `📚 **Today's AI Coaching Lesson - Day ${nextTopic.dayNumber}**\n\n📌 **${nextTopic.title}**\n\n${nextTopic.description}\n\n💡 **Action:** Complete today's milestone and track your progress on ${appUrl}/dashboard`;
 
       await replyFn(lessonMessage);
       return;
@@ -234,7 +246,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
           data: { botState: 'AWAITING_RESUME' },
         });
       }
-      await replyFn('🔄 **Progress Reset.** Visit http://localhost:3000/onboarding to upload a new resume or generate a new career goal!');
+      await replyFn(`🔄 **Progress Reset.** Visit ${appUrl}/onboarding to upload a new resume or generate a new career goal!`);
       return;
     }
 
@@ -320,7 +332,7 @@ export async function processDiscordBotMessage(discordUserId: string, userTag: s
         });
       });
 
-      await replyFn(`🎉 **AI Career Roadmap Ready:** ${roadmap.goalTitle}\n\n📊 **Visual Web Dashboard:** http://localhost:3000/dashboard`);
+      await replyFn(`🎉 **AI Career Roadmap Ready:** ${roadmap.goalTitle}\n\n📊 **Visual Web Dashboard:** ${appUrl}/dashboard`);
       return;
     }
 
