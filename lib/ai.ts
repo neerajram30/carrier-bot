@@ -17,17 +17,30 @@ export const RoadmapSchema = z.object({
 
 export type RoadmapOutput = z.infer<typeof RoadmapSchema>;
 
-// Initialize Google provider with explicit API Key fallback for Vercel
-const googleProvider = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || '',
-});
+// Dynamically resolve Google Provider with quote stripping & clean error messaging
+export function getGoogleProvider() {
+  const rawKey =
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    '';
+
+  const apiKey = rawKey.replace(/^["']|["']$/g, '').trim();
+
+  if (!apiKey) {
+    throw new Error(
+      'Google Generative AI API Key is missing. Please verify that GOOGLE_GENERATIVE_AI_API_KEY is configured in your environment variables on Vercel.'
+    );
+  }
+
+  return createGoogleGenerativeAI({ apiKey });
+}
 
 export async function generateCareerRoadmap(
   resumeText: string,
   targetDuration: string,
   userGoals: string
 ): Promise<RoadmapOutput> {
-  // Use gemini-3.6-flash model via @ai-sdk/google provider
+  const googleProvider = getGoogleProvider();
   const model = googleProvider('gemini-3.6-flash');
 
   const prompt = `

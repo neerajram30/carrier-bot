@@ -1,7 +1,6 @@
 import { prisma } from './prisma';
 import { extractTextFromPdf } from './pdf';
-import { generateCareerRoadmap } from './ai';
-import { google } from '@ai-sdk/google';
+import { generateCareerRoadmap, getGoogleProvider } from './ai';
 import { generateText } from 'ai';
 
 // Helper to sanitize process.env.DISCORD_BOT_TOKEN (stripping any accidental quotes)
@@ -340,8 +339,9 @@ Instructions:
 Reply as an elite, encouraging AI Career & Technical Tutor. Keep your answer clear, engaging, formatted in clean Markdown, and under 300 words.
 `;
 
+      const googleProvider = getGoogleProvider();
       const aiResponse = await generateText({
-        model: google('gemini-3.6-flash'),
+        model: googleProvider('gemini-3.6-flash'),
         prompt: tutorPrompt,
       });
 
